@@ -1,0 +1,113 @@
+version: '2'
+
+networks:
+  docs:
+
+volumes:
+  hyd.ca.com:
+  hyd.couchdb.0.com:
+  hyd.couchdb.1.com:
+  peer0.hyd.com:
+  peer1.hyd.com:
+
+services:
+  hyd.ca.com:
+    container_name: hyd.ca.com 
+    extends:
+      file: org-abstract.yaml
+      service: ca-abstract
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_CA_NAME=hyd-ca-server
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.hyd.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/8846b78d59b9bd7db2bec248742e8e069d4b4bd51c1c47c1fddd44d0b70b8ea3_sk
+    ports:
+      - "7454:7054"
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.hyd.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/8846b78d59b9bd7db2bec248742e8e069d4b4bd51c1c47c1fddd44d0b70b8ea3_sk -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/hyd.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    networks:
+      - docs
+  
+  hyd.couchdb.0.com:
+    container_name: hyd.couchdb.0.com
+    extends:
+      file: org-abstract.yaml
+      service: couch-abstract
+    ports:
+      - "5484:5984"
+    networks:
+      - docs
+  
+  hyd.couchdb.1.com:
+    container_name: hyd.couchdb.1.com
+    extends:
+      file: org-abstract.yaml
+      service: couch-abstract
+    ports:
+      - "6484:5984"
+    networks:
+      - docs
+
+  peer0.hyd.com:
+    container_name: peer0.hyd.com
+    extends:
+      file: org-abstract.yaml
+      service: peer-abstract
+    environment:
+      - CORE_PEER_ID=peer0.hyd.com
+      - CORE_PEER_ADDRESS=peer0.hyd.com:7451
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7451
+      - CORE_PEER_CHAINCODEADDRESS=peer0.hyd.com:7452
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7452
+      #- CORE_PEER_GOSSIP_BOOTSTRAP=peer1.hyd.com:8451
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.hyd.com:7451
+      - CORE_PEER_LOCALMSPID=hydMSP
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=hyd.couchdb.0.com:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+    volumes:
+        - /var/run/:/host/var/run/
+        - ./crypto-config/peerOrganizations/hyd.com/peers/peer0.hyd.com/msp:/etc/hyperledger/fabric/msp
+        - ./crypto-config/peerOrganizations/hyd.com/peers/peer0.hyd.com/tls:/etc/hyperledger/fabric/tls
+        - peer0.hyd.com:/var/hyperledger/production
+    ports:
+      - 7451:7451
+      - 7452:7452
+    depends_on: 
+      - hyd.couchdb.0.com
+    networks:
+      - docs
+
+  peer1.hyd.com:
+    container_name: peer1.hyd.com
+    extends:
+      file: org-abstract.yaml
+      service: peer-abstract
+    environment:
+      - CORE_PEER_ID=peer1.hyd.com
+      - CORE_PEER_ADDRESS=peer1.hyd.com:8451
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:8451
+      - CORE_PEER_CHAINCODEADDRESS=peer1.hyd.com:8452
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:8452
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.hyd.com:8451
+      #- CORE_PEER_GOSSIP_BOOTSTRAP=peer0.hyd.com:7451
+      - CORE_PEER_LOCALMSPID=hydMSP
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=hyd.couchdb.1.com:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+    volumes:
+        - /var/run/:/host/var/run/
+        - ./crypto-config/peerOrganizations/hyd.com/peers/peer1.hyd.com/msp:/etc/hyperledger/fabric/msp
+        - ./crypto-config/peerOrganizations/hyd.com/peers/peer1.hyd.com/tls:/etc/hyperledger/fabric/tls
+        - peer1.hyd.com:/var/hyperledger/production
+    ports:
+      - 8451:8451
+      - 8452:8452
+    networks:
+      - docs
+    depends_on: 
+      - hyd.couchdb.1.com

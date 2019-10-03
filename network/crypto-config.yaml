@@ -1,0 +1,31 @@
+version: '2'
+
+OrdererOrgs:
+  - Name: Orderer 
+    Domain: docsshare.com
+    Specs:
+      - Hostname: orderer
+
+PeerOrgs:
+  - Name: bng 
+    Domain: bng.com 
+    EnableNodeOUs: true
+    Template: 
+      Count: 2
+    Users:
+      Count: 1
+  - Name: hyd 
+    Domain: hyd.com 
+    EnableNodeOUs: true
+    Template: 
+      Count: 2
+    Users:
+      Count: 1
+  - Name: chn 
+    Domain: chn.com 
+    EnableNodeOUs: true
+    Template: 
+      Count: 2
+    Users:
+      Count: 1
+  

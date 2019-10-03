@@ -1,0 +1,168 @@
+Organizations:
+    - &OrdererOrg
+        Name: OrdererOrg
+        ID: OrdererMSP
+        MSPDir: crypto-config/ordererOrganizations/docsshare.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.admin', 'OrdererMSP.peer', 'OrdererMSP.client', 'OrdererMSP.member')"
+            Writers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.admin', 'OrdererMSP.peer', 'OrdererMSP.client', 'OrdererMSP.member')"
+            Admins:
+                Type: Signature
+                Rule: "OR('OrdererMSP.admin')"
+
+    - &Org1
+        Name: bngMSP
+        ID: bngMSP
+        MSPDir: crypto-config/peerOrganizations/bng.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('bngMSP.admin', 'bngMSP.peer', 'bngMSP.client', 'bngMSP.member')"
+            Writers:
+                Type: Signature
+                Rule: "OR('bngMSP.admin', 'bngMSP.peer', 'bngMSP.client', 'bngMSP.member')"
+            Admins:
+                Type: Signature
+                Rule: "OR('bngMSP.admin')"
+
+        AnchorPeers:
+            - Host: peer0.bng.com
+              Port: 7051
+
+    - &Org2
+        Name: hydMSP
+        ID: hydMSP
+        MSPDir: crypto-config/peerOrganizations/hyd.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('hydMSP.admin', 'hydMSP.peer', 'hydMSP.client', 'hydMSP.member')"
+            Writers:
+                Type: Signature
+                Rule: "OR('hydMSP.admin', 'hydMSP.peer', 'hydMSP.client', 'hydMSP.member')"
+            Admins:
+                Type: Signature
+                Rule: "OR('hydMSP.admin')"
+
+        AnchorPeers:
+            - Host: peer0.hyd.com
+              Port: 7451
+    - &Org3
+        Name: chnMSP
+        ID: chnMSP
+        MSPDir: crypto-config/peerOrganizations/chn.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('chnMSP.admin', 'chnMSP.peer', 'chnMSP.client', 'chnMSP.member')"
+            Writers:
+                Type: Signature
+                Rule: "OR('chnMSP.admin', 'chnMSP.peer', 'chnMSP.client', 'chnMSP.member')"
+            Admins:
+                Type: Signature
+                Rule: "OR('chnMSP.admin')"
+
+        AnchorPeers:
+            - Host: peer0.chn.com
+              Port: 9051
+
+Capabilities:
+    Channel: &ChannelCapabilities
+        V1_3: true
+    Orderer: &OrdererCapabilities
+        V1_1: true
+    Application: &ApplicationCapabilities
+        V1_3: true
+        V1_2: false
+        V1_1: false
+
+Application: &ApplicationDefaults
+    Organizations:
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+
+    Capabilities:
+        <<: *ApplicationCapabilities
+
+Orderer: &OrdererDefaults
+    OrdererType: solo
+
+    Addresses:
+        - orderer.docsshare.com:7050
+    BatchTimeout: 2s
+    BatchSize:
+        MaxMessageCount: 10
+        AbsoluteMaxBytes: 99 MB
+        PreferredMaxBytes: 512 KB
+
+    Organizations:
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        BlockValidation:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+#   CHANNEL
+Channel: &ChannelDefaults
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+
+    Capabilities:
+        <<: *ChannelCapabilities
+#   Profile
+Profiles:
+
+    ThreeOrgsOrdererGenesis:
+        <<: *ChannelDefaults
+        Orderer:
+            <<: *OrdererDefaults
+            Organizations:
+                - *OrdererOrg
+            Capabilities:
+                <<: *OrdererCapabilities
+        Consortiums:
+            LicenseConsortium:
+                Organizations:
+                    - *Org1
+                    - *Org2
+                    - *Org3
+    ThreeOrgsChannel:
+        Consortium: LicenseConsortium
+        <<: *ChannelDefaults
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *Org1
+                - *Org2
+                - *Org3
+            Capabilities:
+                <<: *ApplicationCapabilities
+
+  
